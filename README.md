@@ -2,7 +2,7 @@
 
 ## Descripción
 
-Esta API permite gestionar entidades de manera eficiente. Proporciona endpoints para crear, leer, actualizar y eliminar entidades.
+Esta API permite gestionar entidades de manera eficiente. Proporciona endpoints para crear, leer, actualizar y eliminar datos de las entidades.
 
 ## Instalación
 
