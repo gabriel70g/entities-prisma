@@ -2,7 +2,7 @@
 
 ## Descripción
 
-Esta API permite gestionar entidades de manera eficiente. Proporciona endpoints para crear, leer, actualizar y eliminar datos de las entidades.
+Esta API permite gestionar entidades de manera eficiente, proporcionando endpoints para crear, leer, actualizar y eliminar datos.
 
 ## Instalación
 
@@ -61,6 +61,20 @@ PUT /entities/:id
 ```http
 DELETE /entities/:id
 ```
+
+## Tecnologías utilizadas
+
+- NestJS como framework backend.
+- Prisma ORM para la gestión de base de datos.
+
+## Configuración y Expansión
+
+Si necesitas agregar más entidades, sigue estos pasos:
+
+1. Agrega la nueva entidad en el esquema de Prisma (`prisma/schema.prisma`).
+2. Ejecuta la migración con Prisma (`npx prisma migrate dev --name nombre_de_la_migracion`).
+3. Crea un nuevo recurso en NestJS (`nest generate resource nombre-entidad`).
+4. Modifica el recurso generado según los requerimientos del proyecto.
 
 ## Licencia
 
