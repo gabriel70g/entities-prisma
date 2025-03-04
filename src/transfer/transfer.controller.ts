@@ -20,7 +20,7 @@ export class TransferController {
       creditAccount: createTransferDto.transferCreditAccount,
       createdAt: new Date().toISOString(),
     };
-    return this.transferService.create(transferData, 'companyId');
+    return this.transferService.create(transferData, 'company_id');
   }
 
   @Get()
