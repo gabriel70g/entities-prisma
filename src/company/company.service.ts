@@ -12,4 +12,27 @@ export class CompanyService extends BaseService<
   constructor(prisma: PrismaService) {
     super(prisma, prisma.company);
   }
+
+  // empresas que regisradas en el ultimo mes
+  async companiesRegisteredLastMonth(): Promise<Company[]> {
+    return  super.findMany({
+      where: {
+        createdAt: {
+          gte: new Date(new Date().setMonth(new Date().getMonth() - 1))
+        }
+      }
+    });
+  }
+
+  // empresas con fecha de adhesion en el ultimo mes
+  async companiesWithAdhesionDateLastMonth(): Promise<Company[]> {
+    return super.findMany({
+      where: {
+        accession_date: {
+          gte: new Date(new Date().setMonth(new Date().getMonth() - 1))
+        }
+      }
+    });
+  }
+
 }

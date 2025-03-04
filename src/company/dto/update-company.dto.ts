@@ -6,4 +6,9 @@ export class UpdateCompanyDto {
     @IsOptional()
     @IsString()
     companyName?: string;
+
+    @ApiProperty({ example: '2021-09-01', description: 'The date of adhesion of the company' })
+    @IsOptional()
+    @IsString()
+    accesionDate?: string;  
 }

@@ -31,4 +31,19 @@ export class TransferService extends BaseService<
 
     return super.create(data, uniqueField, specificField);
   }
+
+  // empresa con trasnferencias en el ultimo mes
+  async companyWithTransfersLastMonth(): Promise<Company[]> {
+    return this.companyService.findMany({
+      where: {
+        transfers: {
+          some: {
+            createdAt: {
+              gte: new Date(new Date().setMonth(new Date().getMonth() - 1))
+            }
+          }
+        }
+      }
+    });
+  }
 }

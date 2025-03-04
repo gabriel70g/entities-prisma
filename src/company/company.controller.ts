@@ -42,4 +42,16 @@ export class CompanyController {
   remove(@Param('id') id: string) {
     return this.companyService.delete({id: parseInt(id)});
   }
+
+  @Get('companies-registered-last-month')
+  @ApiResponse({ status: 200, description: 'Retrieve companies registered in the last month', type: [Company] })
+  companiesRegisteredLastMonth() {
+    return this.companyService.companiesRegisteredLastMonth();
+  }
+
+  @Get('companies-with-adhesion-date-last-month')
+  @ApiResponse({ status: 200, description: 'Retrieve companies with adhesion date in the last month', type: [Company] })
+  companiesWithAdhesionDateLastMonth() {
+    return this.companyService.companiesWithAdhesionDateLastMonth();
+  }
 }
