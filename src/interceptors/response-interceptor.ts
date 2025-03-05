@@ -13,6 +13,11 @@ import {
     intercept(context: ExecutionContext, next: CallHandler): Observable<ApiResponse<T>> {
       const ctx = context.switchToHttp();
       const response = ctx.getResponse();
+      const request = ctx.getRequest();
+      
+      if (request.url.includes("healthCheck")) {
+        return next.handle();
+      }
   
       return next.handle().pipe(
         map((data) => {

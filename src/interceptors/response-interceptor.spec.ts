@@ -26,6 +26,9 @@ describe('ResponseInterceptor', () => {
           statusCode: 200,
           statusMessage: 'OK',
         }),
+        getRequest: jest.fn().mockReturnValue({
+          url: '/some-url',
+        }),
       }),
     };
 
@@ -51,13 +54,16 @@ describe('ResponseInterceptor', () => {
           statusCode: 200,
           statusMessage: 'OK',
         }),
+        getRequest: jest.fn().mockReturnValue({
+          url: '/some-url',
+        }),
       }),
     };
-
+  
     const mockCallHandler: Partial<CallHandler> = {
       handle: jest.fn().mockReturnValue(of(null)),
     };
-
+  
     interceptor.intercept(mockExecutionContext as ExecutionContext, mockCallHandler as CallHandler).subscribe((result: ApiResponse<any>) => {
       expect(result).toEqual({
         data: null,
