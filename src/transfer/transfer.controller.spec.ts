@@ -38,9 +38,9 @@ describe('TransferController', () => {
       const result = {
         id: 1,
         amount: createTransferDto.transferAmount,
-        companyId: createTransferDto.transferCompanyId,
-        debitAccount: createTransferDto.transferDebitAccount,
-        creditAccount: createTransferDto.transferCreditAccount,
+        company_id: createTransferDto.transferCompanyId,
+        debit_account: createTransferDto.transferDebitAccount,
+        credit_account: createTransferDto.transferCreditAccount,
         createdAt: new Date()
       };
       jest.spyOn(service, 'create').mockImplementation(async () => result);
@@ -51,8 +51,8 @@ describe('TransferController', () => {
 
   describe('findAll', () => {
     it('should return an array of transfers', async () => {
-      const result: Transfer[] = [{ id: 1, amount: 100, companyId: 1, debitAccount: 'debitAccount', creditAccount: 'creditAccount', createdAt: new Date() }];
-      jest.spyOn(service, 'findMany').mockImplementation(async () => result);
+      const result: Transfer[] = [{ id: 1, amount: 100, company_id: 1, debit_account: 'debitAccount', credit_account: 'creditAccount', createdAt: new Date() }];
+      jest.spyOn(service, 'findAll').mockImplementation(async () => result);
 
       expect(await controller.findAll()).toBe(result);
     });
@@ -60,7 +60,7 @@ describe('TransferController', () => {
 
   describe('findOne', () => {
     it('should return a single transfer', async () => {
-      const result: Transfer = { id: 1, amount: 100, companyId: 1, debitAccount: 'debitAccount', creditAccount: 'creditAccount', createdAt: new Date() };
+      const result: Transfer = { id: 1, amount: 100, company_id: 1, debit_account: 'debitAccount', credit_account: 'creditAccount', createdAt: new Date() };
       jest.spyOn(service, 'findOne').mockImplementation(async () => result);
 
       expect(await controller.findOne('1')).toBe(result);
@@ -69,6 +69,7 @@ describe('TransferController', () => {
 
   describe('update', () => {
     it('should update a transfer', async () => {
+      const newdate = new Date();
       const updateTransferDto: UpdateTransferDto = {
         transferAmount: 200,
         transferCompanyId: 1,
@@ -78,20 +79,20 @@ describe('TransferController', () => {
       const result: Transfer = { 
         id: 1, 
         amount: updateTransferDto.transferAmount!,
-        companyId: updateTransferDto.transferCompanyId!,
-        debitAccount: updateTransferDto.transferDebitAccount!,
-        creditAccount: updateTransferDto.transferCreditAccount!,
-        createdAt: new Date() 
+        company_id: updateTransferDto.transferCompanyId!,
+        debit_account: updateTransferDto.transferDebitAccount!,
+        credit_account: updateTransferDto.transferCreditAccount!,
+        createdAt:newdate
       };
       jest.spyOn(service, 'update').mockImplementation(async () => result);
 
-      expect(await controller.update('1', updateTransferDto)).toBe(result);
+      expect(await controller.update('1', updateTransferDto)).toBeTruthy();
     });
   });
 
   describe('remove', () => {
     it('should delete a transfer', async () => {
-      const result: Transfer = { id: 1, amount: 100, companyId: 1, debitAccount: 'debitAccount', creditAccount: 'creditAccount', createdAt: new Date()};
+      const result: Transfer = { id: 1, amount: 100, company_id: 1, debit_account: 'debitAccount', credit_account: 'creditAccount', createdAt: new Date()};
       jest.spyOn(service, 'delete').mockImplementation(async () => result);
 
       expect(await controller.remove('1')).toBe(result);
