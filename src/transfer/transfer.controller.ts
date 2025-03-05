@@ -14,19 +14,25 @@ export class TransferController {
   @ApiResponse({ status: 201, description: 'Transfer created successfully' })
   create(@Body() createTransferDto: CreateTransferDto) {
     const transferData = {
+    
       amount: createTransferDto.transferAmount,
-      companyId: createTransferDto.transferCompanyId,
-      debitAccount: createTransferDto.transferDebitAccount,
-      creditAccount: createTransferDto.transferCreditAccount,
-      createdAt: new Date().toISOString(),
+      company: { connect: { id: createTransferDto.transferCompanyId } },
+      debit_account: createTransferDto.transferDebitAccount,
+      credit_account: createTransferDto.transferCreditAccount,
+      createdAt: new Date(),
     };
-    return this.transferService.create(transferData, 'company_id');
+    return this.transferService.create(transferData);
   }
 
+  @Get('last-month')
+  @ApiResponse({ status: 200, description: 'Retrieve transfers from last month', type: [Transfer] })
+  transfersLastMonth() {
+    return this.transferService.companiesWithTransfersLastMonth();
+  }
   @Get()
   @ApiResponse({ status: 200, description: 'Retrieve all transfers', type: [Transfer] })  
   findAll() {
-    return this.transferService.findMany();
+    return this.transferService.findAll({});
   }
 
   @Get(':id')
@@ -56,4 +62,6 @@ export class TransferController {
   remove(@Param('id') id: string) {
     return this.transferService.delete({ id: +id });
   }
+
+
 }

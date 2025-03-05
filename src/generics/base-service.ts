@@ -1,102 +1,74 @@
-
-import { PrismaService } from 'src/prisma/prisma.service';
-import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
-import { ConflictException, InternalServerErrorException, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
 import { logger } from 'src/logger/loggerBase';
 
+@Injectable()
+export class BaseService<T, CreateInput, UpdateInput, WhereUniqueInput, WhereInput, OrderByInput> {
+  constructor(private readonly prisma: PrismaService, private readonly model: any) { }
 
-export class BaseService<T, U, V> {
-  constructor(
-    private readonly prisma: PrismaService,
-    private readonly model: any // Modelo Prisma dinámico
-  ) {}
-
-  async findOne(where: U): Promise<T | null> {
-    const record = await this.model.findUnique({ where });
-    if (!record) {
-      throw new NotFoundException(`Record not found`);
+  async findOne(where: WhereUniqueInput): Promise<T | null> {
+    try {
+      const resp = this.model.findUnique({ where });
+      logger.info('findOne', resp);
+      return resp;
     }
-    return record;
+    catch (error) {
+      logger.error(error);
+      throw new Error(error);
+    }
   }
 
-  async findMany(params?: {
+  async findAll(params: {
     skip?: number;
     take?: number;
-    cursor?: U;
-    where?: V;
-    orderBy?: any;
+    cursor?: WhereUniqueInput;
+    where?: WhereInput;
+    orderBy?: OrderByInput;
   }): Promise<T[]> {
-  try {
-    const result = await this.model.findMany(params);
-    logger.info(`findMany result: ${JSON.stringify(result)}`);
-    return result;
-  } catch (error) {
-    logger.error(error.message);
-    throw new InternalServerErrorException(error.message);
-  }
-
-
-  }
-
-  async create(data: any, uniqueField?: keyof U, specificField?: keyof V): Promise<T> {
     try {
-
-      // Verifica si el campo específico existe en los datos proporcionados
-      if (specificField && data[specificField] !== undefined) {
-        const specificRecord = await this.model.findFirst({ where: { [specificField]: data[specificField] } });
-        if (!specificRecord) {
-          throw new NotFoundException(`Record with this ${String(specificField)} not found`);
-        }
-      }
-      logger.info(`save data: ${JSON.stringify(data)}`);
-      return await this.model.create({ data });
+      const { skip, take, cursor, where, orderBy } = params;
+      return this.model.findMany({ skip, take, cursor, where, orderBy });
     } catch (error) {
-      
-      if (error instanceof PrismaClientKnownRequestError && error.code === 'P2002') {
-        const messageError = `Record with this ${String(uniqueField)} already exists`
-        logger.error(messageError);
-        throw new ConflictException(messageError);
-      }
+      logger.error(error);
+      throw new Error(error);
+    }
 
-      logger.error(error.message);
-      throw new InternalServerErrorException(error.message);
+  }
+
+  async create(data: CreateInput): Promise<T> {
+    try {
+      const resp = this.model.create({ data });
+      logger.info('create', resp);
+      return resp;
+    }
+    catch (error) {
+      logger.error(error);
+      throw new Error(error);
     }
   }
 
-  async update(params: { where: U; data: any }): Promise<T> {
-    let messageError = '';
+  async update(params: { where: WhereUniqueInput; data: UpdateInput }): Promise<T> {
     try {
-      // Verifica si el registro existe antes de actualizar
-      const existingRecord = await this.model.findUnique({ where: params.where });
-      if (!existingRecord) {
-        messageError = `Record not found`;
-        throw new NotFoundException(messageError);
-      }
-      return await this.model.update(params);
+      const { where, data } = params;
+      const resp = this.model.update({ where, data
+      });
+      logger.info('update', resp);
+      return resp;
     } catch (error) {
-      if (error instanceof PrismaClientKnownRequestError && error.code === 'P2002') {
-        messageError = `Record with this ${String(params.where)} already exists`;
-        logger.error(messageError);
-        throw new ConflictException(messageError);
-      }
-      logger.error(error.message);
-      throw new InternalServerErrorException(error.message);
+      logger.error(error);
+      throw new Error(error);
     }
   }
 
-  async delete(where: U): Promise<T> {
-    let messageError = '';
+  async delete(where: WhereUniqueInput): Promise<T> {
     try {
-      // Verifica si el registro existe antes de eliminar
-      const existingRecord = await this.model.findUnique({ where });
-      if (!existingRecord) {
-        messageError = `Record not found`;
-        throw new NotFoundException(messageError);
-      }
-      return await this.model.delete({ where });
-    } catch (error) {
-      logger.error(error.message);
-      throw new InternalServerErrorException(error.message);
-    }
+    const resp = this.model.delete({ where });
+    logger.info('delete', resp);
+    return resp;
   }
+  catch (error) {
+    logger.error(error);
+    throw new Error(error);
+  }
+}
 }

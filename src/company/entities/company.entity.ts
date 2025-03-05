@@ -1,7 +1,7 @@
 export class Company {
     id: number;
     cuit: string;
-    companyName: string;
-    accesionDate: Date;
+    company_name: string;
+    accession_date: Date;
     createdAt: Date;
 }
