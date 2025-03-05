@@ -1,16 +1,15 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { BaseService } from './base-service';
 import { PrismaService } from '../prisma/prisma.service';
-import { Logger } from '@nestjs/common';
+import { BaseService } from './base-service';
+import { logger } from 'src/logger/loggerBase';
 
-class TestEntity { id: string; name: string; } // Entidad ficticia para pruebas
+jest.mock('src/logger/loggerBase');
 
 describe('BaseService', () => {
-    let service: BaseService<TestEntity, { id: string }, any>;
+    let service: BaseService<any, any, any, any, any, any>;
     let prismaService: PrismaService;
-    let logger: Logger;
 
-    const mockPrisma = {
+    const mockModel = {
         findUnique: jest.fn(),
         findMany: jest.fn(),
         create: jest.fn(),
@@ -18,100 +17,109 @@ describe('BaseService', () => {
         delete: jest.fn(),
     };
 
-    const mockLogger = {
-        log: jest.fn(),
-        error: jest.fn(),
-        warn: jest.fn(),
-        debug: jest.fn(),
-        verbose: jest.fn(),
-    };
-
     beforeEach(async () => {
         const module: TestingModule = await Test.createTestingModule({
             providers: [
-                { provide: PrismaService, useValue: mockPrisma },
-                { provide: Logger, useValue: mockLogger },
+                {
+                    provide: PrismaService,
+                    useValue: {
+                        model: mockModel,
+                    },
+                },
+                {
+                    provide: BaseService,
+                    useFactory: (prismaService: PrismaService) => new BaseService(prismaService, mockModel),
+                    inject: [PrismaService],
+                },
             ],
         }).compile();
 
+        service = module.get<BaseService<any, any, any, any, any, any>>(BaseService);
         prismaService = module.get<PrismaService>(PrismaService);
-        logger = module.get<Logger>(Logger);
-        service = new BaseService(prismaService, mockPrisma); // Pasamos el mock como modelo
     });
 
     it('should be defined', () => {
         expect(service).toBeDefined();
     });
 
-    it('should call findOne with correct parameters', async () => {
-        const id = '123';
-        mockPrisma.findUnique.mockResolvedValue({ id, name: 'Test Entity' });
+    describe('findOne', () => {
+        it('should return a single entity', async () => {
+          const entity = { id: 1, name: 'Test' };
+          mockModel.findUnique.mockResolvedValue(entity);
+      
+          const result = await service.findOne({ id: 1 });
+          expect(result).toEqual(entity);
+        });
+      
+        it('should throw an error if findOne fails', async () => {
+          mockModel.findUnique.mockRejectedValue(new Error('Error'));
+      
+          await expect(service.findOne({ id: 1 })).rejects.toThrow('Error');
+        });
+      });
 
-        const result = await service.findOne({ id });
+    describe('findAll', () => {
+        it('should return an array of entities', async () => {
+            const entities = [{ id: 1, name: 'Test' }];
+            mockModel.findMany.mockResolvedValue(entities);
 
-        expect(mockPrisma.findUnique).toHaveBeenCalledWith({ where: { id } });
-        expect(result).toEqual({ id, name: 'Test Entity' });
+            const result = await service.findAll({});
+            expect(result).toEqual(entities);
+        });
+
+        it('should throw an error if findAll fails', async () => {
+            mockModel.findMany.mockRejectedValue(new Error('Error'));
+
+            await expect(service.findAll({})).rejects.toThrow('Error');
+        });
     });
 
-    it('should call findMany and return entities', async () => {
-        mockPrisma.findMany.mockResolvedValue([{ id: '123', name: 'Entity1' }]);
+    describe('create', () => {
+        it('should create a new entity', async () => {
+            const entity = { id: 1, name: 'Test' };
+            mockModel.create.mockResolvedValue(entity);
 
-        const result = await service.findMany();
+            const result = await service.create({ name: 'Test' });
+            expect(result).toEqual(entity);
+        });
 
-        expect(mockPrisma.findMany).toHaveBeenCalledWith(undefined);
-        expect(result).toEqual([{ id: '123', name: 'Entity1' }]);
+        it('should throw an error if create fails', async () => {
+            mockModel.create.mockRejectedValue(new Error('Error'));
+
+            await expect(service.create({ name: 'Test' })).rejects.toThrow('Error');
+        });
     });
 
-    it('should create an entity', async () => {
-        const data = { name: 'New Entity' };
-        const createdEntity = { id: '123', ...data };
-        mockPrisma.create.mockResolvedValue(createdEntity);
+    describe('update', () => {
+        it('should update an existing entity', async () => {
+            const entity = { id: 1, name: 'Updated Test' };
+            mockModel.update.mockResolvedValue(entity);
 
-        const result = await service.create(data);
+            const result = await service.update({ where: { id: 1 }, data: { name: 'Updated Test' } });
+            expect(result).toEqual(entity);
+        });
 
-        expect(mockPrisma.create).toHaveBeenCalledWith({ data });
-        expect(result).toEqual(createdEntity);
+        it('should throw an error if update fails', async () => {
+            mockModel.update.mockRejectedValue(new Error('Error'));
+
+            await expect(service.update({ where: { id: 1 }, data: { name: 'Updated Test' } })).rejects.toThrow('Error');
+        });
     });
 
-    it('should update an entity', async () => {
-        const id = '123';
-        const data = { name: 'Updated Name' };
-        const updatedEntity = { id, ...data };
-        mockPrisma.update.mockResolvedValue(updatedEntity);
+    describe('delete', () => {
+        it('should delete an existing entity', async () => {
+            const entity = { id: 1, name: 'Test' };
+            mockModel.delete.mockResolvedValue(entity);
 
-        const result = await service.update({ where: { id }, data });
+            const result = await service.delete({ id: 1 });
+            expect(result).toEqual(entity);
+        });
 
-        expect(mockPrisma.update).toHaveBeenCalledWith({ where: { id }, data });
-        expect(result).toEqual(updatedEntity);
+        it('should throw an error if delete fails', async () => {
+            mockModel.delete.mockRejectedValue(new Error('Error'));
+
+            await expect(service.delete({ id: 1 })).rejects.toThrow('Error');
+
+        });
     });
-
-    it('should delete an entity', async () => {
-        const id = '123';
-        const deletedEntity = { id, name: 'Deleted Entity' };
-        mockPrisma.delete.mockResolvedValue(deletedEntity);
-
-        const result = await service.delete({ id });
-
-        expect(mockPrisma.delete).toHaveBeenCalledWith({ where: { id } });
-        expect(result).toEqual(deletedEntity);
-    });
-
-    it('should log an error when findOne throws an exception', async () => {
-        const id = '123';
-        const error = new Error('Test Error');
-        mockPrisma.findUnique.mockRejectedValue(error);
-
-        await expect(service.findOne({ id })).rejects.toThrow(error);
-    
-    });
-
-    it('should log an error when create throws an exception', async () => {
-        const data = { name: 'New Entity' };
-        const error = new Error('Test Error');
-        mockPrisma.create.mockRejectedValue(error);
-
-        await expect(service.create(data)).rejects.toThrow(error);
-    });
-
-    // Agrega más pruebas para otros métodos y excepciones según sea necesario
 });

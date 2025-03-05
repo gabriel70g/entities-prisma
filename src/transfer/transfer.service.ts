@@ -24,7 +24,7 @@ export class TransferService extends BaseService<
     }
 
     async create(data: Prisma.TransferCreateInput): Promise<{ id: number; amount: number; company_id: number; debit_account: string; credit_account: string; createdAt: Date; }> {
-      const companyId = data?.company.connect?.id;
+      const companyId = data?.company?.connect?.id;
       if (!companyId)
         throw new Error('company id is required')
 
