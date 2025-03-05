@@ -23,5 +23,5 @@ export class UpdateTransferDto extends PartialType(CreateTransferDto) {
     readonly transferCreditAccount: string;
     @ApiProperty({ example: "2025-12-31", description: 'The date of the transfer' })
     @IsString()
-    readonly createdAt: number;
+    readonly createdAt: Date;
 }

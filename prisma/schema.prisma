@@ -27,8 +27,8 @@ model Transfer {
   id            Int      @id @default(autoincrement())
   amount        Float
   company_id     Int
-  debit_account  String
-  credit_account String
+  debit_account  String?
+  credit_account String?
   createdAt     DateTime @default(now())
   company       Company  @relation(fields: [company_id], references: [id])
 }

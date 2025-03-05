@@ -4,7 +4,6 @@ import { PrismaService } from '../prisma/prisma.service';
 import { NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { UpdateTransferDto } from './dto/update-transfer.dto';
-import { datesLastMonth } from 'src/helpers/datesLastMonth';
 
 describe('TransferService', () => {
   let service: TransferService;
@@ -69,7 +68,7 @@ describe('TransferService', () => {
 
     it('should update a transfer', async () => {
       const transfer = { id: 1, amount: 100, company_id: 1, debit_account: 'debit', credit_account: 'credit', createdAt: new Date() };
-      const updateData = { amount: 200 } as UpdateTransferDto;
+      const updateData = { amount: 200 } as unknown as UpdateTransferDto;
       (prismaService.transfer.findFirst as jest.Mock).mockResolvedValue(transfer);
       (prismaService.transfer.update as jest.Mock).mockResolvedValue({ ...transfer, ...updateData });
 
@@ -105,15 +104,26 @@ describe('TransferService', () => {
 
   describe('companiesWithTransfersLastMonth', () => {
     it('should return companies with transfers in the last month', async () => {
-      const { startOfLastMonth, endOfLastMonth } = datesLastMonth();
-      const transfers = [{ company_id: 1 }];
+      const newDate = new Date('2025-01-01');
+      const transfers = [{ id: 1, amount: 100, company_id: 1, debit_account: 'debit', credit_account: 'credit', createdAt: newDate, company: { id: 1, company_name: 'Company1', cuit: '12345' } }];
       const companies = [{ id: 1, company_name: 'Company1', cuit: '12345' }];
       (prismaService.transfer.findMany as jest.Mock).mockResolvedValue(transfers);
       (prismaService.company.findMany as jest.Mock).mockResolvedValue(companies);
 
       const result = await service.companiesWithTransfersLastMonth();
 
-      expect(result).toEqual([{ id: 1, name: 'Company1', cuit: '12345' }]);
+      expect(result).toEqual([{
+        id: 1,
+        name: 'Company1',
+        cuit: '12345',
+        transfers: [{
+          id: 1,
+          amount: 100,
+          debit_account: 'debit',
+          credit_account: 'credit',
+          createdAt: newDate
+        }]
+      }]);
     });
 
     it('should throw an error if there is an issue retrieving companies', async () => {

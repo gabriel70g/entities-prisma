@@ -46,8 +46,8 @@ export class TransferService extends BaseService<
         id: transfer.id,
         amount: transfer.amount,
         company_id: transfer.company_id,
-        debit_account: transfer.debit_account,
-        credit_account: transfer.credit_account,
+        debit_account: transfer.debit_account||'-',
+        credit_account: transfer.credit_account||'-',
         createdAt: transfer.createdAt
       };
     }    
@@ -90,8 +90,8 @@ export class TransferService extends BaseService<
         id: transfer.id,
         amount: transfer.amount,
         company_id: transfer.company_id,
-        debit_account: transfer.debit_account,
-        credit_account: transfer.credit_account,
+        debit_account: transfer.debit_account||'-',
+        credit_account: transfer.credit_account||'-',
         createdAt: transfer.createdAt
       };
     }

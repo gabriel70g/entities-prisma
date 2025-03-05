@@ -69,12 +69,13 @@ describe('TransferController', () => {
 
   describe('update', () => {
     it('should update a transfer', async () => {
-      const newdate = new Date();
+      const newdate = new Date('2025-01-01');
       const updateTransferDto: UpdateTransferDto = {
         transferAmount: 200,
         transferCompanyId: 1,
         transferDebitAccount: 'debitAccount',
         transferCreditAccount: 'creditAccount',
+        createdAt: newdate,
       };
       const result: Transfer = { 
         id: 1, 
@@ -82,10 +83,10 @@ describe('TransferController', () => {
         company_id: updateTransferDto.transferCompanyId!,
         debit_account: updateTransferDto.transferDebitAccount!,
         credit_account: updateTransferDto.transferCreditAccount!,
-        createdAt:newdate
+        createdAt: newdate
       };
-      jest.spyOn(service, 'update').mockImplementation(async () => result);
-
+      jest.spyOn(service, 'updateTransfer').mockImplementation(async () => result);
+  
       expect(await controller.update('1', updateTransferDto)).toBeTruthy();
     });
   });
