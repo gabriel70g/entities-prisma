@@ -6,7 +6,7 @@ import { Transfer, Prisma } from '@prisma/client';
 import { BaseService } from '../generics/base-service';
 import { datesLastMonth } from 'src/helpers/datesLastMonth';
 import { UpdateTransferDto } from './dto/update-transfer.dto';
-import { mapToTransferUpadate } from 'src/mappers/transferMap';
+import { mapToTransferUpdate } from 'src/mappers/transferMap';
 import { logger } from 'src/logger/loggerBase';
 
 @Injectable()
@@ -52,26 +52,23 @@ export class TransferService extends BaseService<
       };
     }    
     async updateTransfer(id: number, data: UpdateTransferDto): Promise<Transfer> {
-
       const transfer = await this.prismaService.transfer.findFirst({
         where: { id },
       });
-
+    
       if (!transfer) {
         throw new NotFoundException(`Transfer with id ${id} not found`);
       }
-
-      const updateData = {
-        ...transfer,
-        ...mapToTransferUpadate(data),
-      };
+    
+      const updateData = mapToTransferUpdate(data);
+    
       const updatedTransfer = await this.prismaService.transfer.update({
         where: { id },
         data: updateData,
       });
-
+    
       logger.info(`Transfer with id ${id} updated successfully`);
-
+    
       return updatedTransfer;
     }
 
@@ -102,37 +99,48 @@ export class TransferService extends BaseService<
     async companiesWithTransfersLastMonth() {
       try {
         const { startOfLastMonth, endOfLastMonth } = datesLastMonth();
-
+    
+        // Obtener las transferencias en el último mes
         const transfers = await this.prismaService.transfer.findMany({
           where: {
             createdAt: {
               gte: startOfLastMonth,
               lte: endOfLastMonth
             }
+          },
+          include: {
+            company: true, // Incluir la información de la compañía en la transferencia
           }
         });
-
-        const companies = transfers.map(t => t.company_id); 
-
-        const resp = await this.prismaService.company.findMany({
-          where: {
-            id: {
-              in: companies
-            }
+    
+        // Filtrar las compañías que tienen transferencias
+        const companiesWithTransfers = transfers.reduce((acc, transfer) => {
+          const companyId = transfer.company_id;
+          // si no existe la compañía en el objeto, se crea
+          if (!acc[companyId]) {
+            acc[companyId] = {
+              id: transfer.company.id,
+              name: transfer.company.company_name,
+              cuit: transfer.company.cuit,
+              transfers: []
+            };
           }
-        });
-
-        return resp.map(c  => {
-          return {
-            id: c.id,
-            name: c.company_name, 
-            cuit: c.cuit
-          }
-        });
-
+          // se añade la transferencia a la compañía
+          acc[companyId].transfers.push({
+            id: transfer.id,
+            amount: transfer.amount,
+            debit_account: transfer.debit_account,
+            credit_account: transfer.credit_account,
+            createdAt: transfer.createdAt
+          });
+          return acc;
+        }, {});
+    
+        // Convertir el objeto en un array
+        return Object.values(companiesWithTransfers);
+    
       } catch (error) {
         throw new Error(`Error getting companies with transfers in the last month. Error: ${error}`);
-      }   
-    
-  }
+      }
+    }
 }

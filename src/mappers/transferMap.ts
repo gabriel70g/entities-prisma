@@ -1,21 +1,29 @@
-//necesito hacer un mapper desde el dto de la transferencia a la entidad de la transferencia
-
 import { UpdateTransferDto } from "src/transfer/dto/update-transfer.dto";
-import { Transfer } from "src/transfer/entities/transfer.entity";
+import { Prisma, Transfer } from "@prisma/client";
 
-// src/mappers/mapToTransfer.ts
-export const mapToTransferUpadate = (transferDto: UpdateTransferDto) => {
-    return {
-        amount: transferDto.transferAmount,
-        company_id: transferDto.transferCompanyId,
-        debit_account: transferDto.transferDebitAccount,   
-        credit_account: transferDto.transferCreditAccount,
-    };
+export const mapToTransferUpdate = (data: UpdateTransferDto): Prisma.TransferUpdateInput => {
+    const updateData: Prisma.TransferUpdateInput = {};
+
+    if (data.transferAmount !== undefined) {
+        updateData.amount = data.transferAmount;
+    }
+    if (data.transferDebitAccount !== undefined) {
+        updateData.debit_account = data.transferDebitAccount;
+    }
+    if (data.transferCreditAccount !== undefined) {
+        updateData.credit_account = data.transferCreditAccount;
+    }
+    if (data.transferCompanyId !== undefined) {
+        updateData.company = { connect: { id: data.transferCompanyId } };
+    }
+    if (data.createdAt !== undefined) {
+        updateData.createdAt = new Date(data.createdAt);
+    }
+
+    return updateData;
 }
 
-// necesito hacer un mapper desde la entidad de la transferencia a la dto de la transferencia
-// src/mappers/mapToTransferDto.ts
-export const mapToTransferDto = (transfer:Transfer) => {
+export const mapToTransferDto = (transfer: Transfer) => {
     return {
         transferAmount: transfer.amount,
         transferCompanyId: transfer.company_id,

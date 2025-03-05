@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNumber, IsString, IsDateString } from 'class-validator';
+import { IsNumber, IsString, IsDateString, IsOptional } from 'class-validator';
 
 export class CreateTransferDto {
   @ApiProperty({ example: 100, description: 'The amount of the transfer' })
@@ -12,10 +12,12 @@ export class CreateTransferDto {
 
   @ApiProperty({ example: 'Debit Account', description: 'The debit account of the transfer' })
   @IsString()
+  @IsOptional()
   readonly transferDebitAccount: string;
 
   @ApiProperty({ example: 'Credit Account', description: 'The credit account of the transfer' })
   @IsString()
+  @IsOptional()
   readonly transferCreditAccount: string;
 
 }
