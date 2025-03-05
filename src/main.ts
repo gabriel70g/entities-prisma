@@ -1,9 +1,27 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { ValidationPipe } from '@nestjs/common';
+import helmet from 'helmet';
+import { logger } from './logger/loggerBase';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true,
+      whitelist: true,
+      forbidNonWhitelisted: true,
+    }),
+  );
+  
+  app.enableCors({
+    allowedHeaders: '*',
+    origin: '*'
+  });
+
+  app.use(helmet());
 
   const config = new DocumentBuilder()
     .setTitle('Clients API')
@@ -17,7 +35,7 @@ async function bootstrap() {
 
   const port = process.env.PORT ?? 8080;
   await app.listen(port, () =>
-    console.log(`API is running on PORT: ${port}`),
+    logger.info(`API is running on PORT: ${port}`),
   );
 }
 bootstrap();
