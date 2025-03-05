@@ -44,17 +44,7 @@ export class TransferController {
   @Patch(':id')
   @ApiResponse({ status: 200, description: 'Transfer updated successfully', type: Transfer })
   update(@Param('id') id: string, @Body() updateTransferDto: UpdateTransferDto) {
-    const updateData = {
-      amount: updateTransferDto.transferAmount,
-      companyId: updateTransferDto.transferCompanyId,
-      debitAccount: updateTransferDto.transferDebitAccount,
-      creditAccount: updateTransferDto.transferCreditAccount,
-      createdAt: new Date().toISOString(),
-    };
-    return this.transferService.update({
-      where: { id: +id },
-      data: updateData
-    });
+    return this.transferService.updateTransfer(+id, updateTransferDto)
   }
 
   @Delete(':id')

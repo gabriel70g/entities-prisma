@@ -5,6 +5,9 @@ import { PrismaService } from '../prisma/prisma.service';
 import { Transfer, Prisma } from '@prisma/client';
 import { BaseService } from '../generics/base-service';
 import { datesLastMonth } from 'src/helpers/datesLastMonth';
+import { UpdateTransferDto } from './dto/update-transfer.dto';
+import { mapToTransferUpadate } from 'src/mappers/transferMap';
+import { logger } from 'src/logger/loggerBase';
 
 @Injectable()
 export class TransferService extends BaseService<
@@ -48,31 +51,31 @@ export class TransferService extends BaseService<
         createdAt: transfer.createdAt
       };
     }    
-    async update(params: { where: { id: number }; data: Prisma.TransferUpdateInput }): Promise<{ id: number; amount: number; company_id: number; debit_account: string; credit_account: string; createdAt: Date; }> {
-      const { where, data } = params;
+    async updateTransfer(id: number, data: UpdateTransferDto): Promise<Transfer> {
 
       const transfer = await this.prismaService.transfer.findFirst({
-        where: { id: where.id },
+        where: { id },
       });
 
       if (!transfer) {
-        throw new NotFoundException(`Transfer with id ${where.id} not found`);
+        throw new NotFoundException(`Transfer with id ${id} not found`);
       }
 
+      const updateData = {
+        ...transfer,
+        ...mapToTransferUpadate(data),
+      };
       const updatedTransfer = await this.prismaService.transfer.update({
-        where,
-        data
+        where: { id },
+        data: updateData,
       });
 
-      return {
-        id: updatedTransfer.id,
-        amount: updatedTransfer.amount,
-        company_id: updatedTransfer.company_id,
-        debit_account: updatedTransfer.debit_account,
-        credit_account: updatedTransfer.credit_account,
-        createdAt: updatedTransfer.createdAt
-      };
+      logger.info(`Transfer with id ${id} updated successfully`);
+
+      return updatedTransfer;
     }
+
+
     async delete(where: Prisma.TransferWhereUniqueInput): Promise<{ id: number; amount: number; company_id: number; debit_account: string; credit_account: string; createdAt: Date; }> {
       const transfer = await this.prismaService.transfer.findFirst({
         where
@@ -96,8 +99,6 @@ export class TransferService extends BaseService<
       };
     }
 
-    //necesito un endpoint que traiga las empresas que hicieron transferencias el último mes
-    //fijarse en las transferencias y luego hacer un resumen solo con las empresas sin las transferencias
     async companiesWithTransfersLastMonth() {
       try {
         const { startOfLastMonth, endOfLastMonth } = datesLastMonth();
@@ -113,11 +114,19 @@ export class TransferService extends BaseService<
 
         const companies = transfers.map(t => t.company_id); 
 
-        return this.prismaService.company.findMany({
+        const resp = await this.prismaService.company.findMany({
           where: {
             id: {
               in: companies
             }
+          }
+        });
+
+        return resp.map(c  => {
+          return {
+            id: c.id,
+            name: c.company_name, 
+            cuit: c.cuit
           }
         });
 
